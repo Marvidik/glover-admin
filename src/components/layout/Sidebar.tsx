@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
@@ -25,8 +24,6 @@ const Sidebar = ({ currentPage, onPageChange }: SidebarProps) => {
     { id: 'dashboard' as PageType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'users' as PageType, label: 'User Management', icon: Users },
     { id: 'transactions' as PageType, label: 'Transactions', icon: CreditCard },
-    { id: 'bans' as PageType, label: 'Ban Management', icon: Ban },
-    { id: 'otps' as PageType, label: 'Security & OTPs', icon: Key },
     { id: 'pincodes' as PageType, label: 'PIN & Codes', icon: Settings },
   ];
 

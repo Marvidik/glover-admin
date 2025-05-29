@@ -5,11 +5,9 @@ import DashboardHome from '@/components/dashboard/DashboardHome';
 import UserManagement from '@/components/users/UserManagement';
 import UserProfile from '@/components/users/UserProfile';
 import TransactionManagement from '@/components/transactions/TransactionManagement';
-import BanManagement from '@/components/bans/BanManagement';
-import OTPManagement from '@/components/security/OTPManagement';
 import PinCodeManagement from '@/components/security/PinCodeManagement';
 
-export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'bans' | 'security' | 'otps' | 'pincodes';
+export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'pincodes';
 
 const DashboardLayout = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
@@ -28,10 +26,6 @@ const DashboardLayout = () => {
         return <UserProfile userId={selectedUserId} onBack={() => setCurrentPage('users')} />;
       case 'transactions':
         return <TransactionManagement />;
-      case 'bans':
-        return <BanManagement />;
-      case 'otps':
-        return <OTPManagement />;
       case 'pincodes':
         return <PinCodeManagement />;
       default:

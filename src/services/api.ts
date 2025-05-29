@@ -1,4 +1,3 @@
-
 const BASE_URL = 'https://banking.pythonanywhere.com';
 
 interface LoginRequest {
@@ -83,6 +82,13 @@ interface UserProfile {
     user: number;
     otp: string;
   };
+  transactions: {
+    Date: string;
+    Type: string;
+    Amount: string;
+    Status: string;
+    Details: string;
+  }[];
 }
 
 interface Transaction {

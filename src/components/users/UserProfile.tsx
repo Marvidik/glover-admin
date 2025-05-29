@@ -1,12 +1,14 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, CheckCircle, Ban, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Ban, Edit, Save } from 'lucide-react';
+import { apiService, UserProfile as UserProfileType } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileProps {
   userId: string | null;
@@ -15,35 +17,59 @@ interface UserProfileProps {
 
 const UserProfile = ({ userId, onBack }: UserProfileProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfileType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBanning, setIsBanning] = useState(false);
+  const { toast } = useToast();
 
-  // Mock user data
-  const user = {
-    id: userId,
-    username: 'johnsmith',
-    email: 'john.smith@email.com',
-    firstName: 'John',
-    lastName: 'Smith',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-05-15',
-    address: '123 Main St, New York, NY 10001',
-    accountType: 'Premium',
-    verified: true,
-    banned: false,
-    balance: '$12,450.00',
-    joinDate: '2024-01-15',
-    lastLogin: '2024-03-15 14:30:00',
-    securityQuestions: [
-      { question: 'What is your mother\'s maiden name?', answer: '••••••••' },
-      { question: 'What was your first pet\'s name?', answer: '••••••••' },
-    ],
-    transactionPin: '••••',
+  useEffect(() => {
+    if (userId) {
+      fetchUserProfile();
+    }
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    if (!userId) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await apiService.getUserProfile(Number(userId));
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load user profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const transactions = [
-    { id: 1, date: '2024-03-15', type: 'Transfer', amount: '-$500.00', status: 'Completed', recipient: 'Sarah Johnson' },
-    { id: 2, date: '2024-03-14', type: 'Deposit', amount: '+$2,000.00', status: 'Completed', recipient: 'Direct Deposit' },
-    { id: 3, date: '2024-03-13', type: 'Transfer', amount: '-$150.00', status: 'Pending', recipient: 'Mike Wilson' },
-  ];
+  const handleBanUser = async (ban: boolean) => {
+    if (!userId) return;
+    
+    try {
+      setIsBanning(true);
+      await apiService.banUser(Number(userId), ban);
+      toast({
+        title: "Success",
+        description: `User ${ban ? 'banned' : 'unbanned'} successfully`,
+      });
+      // Refresh user profile to get updated data
+      fetchUserProfile();
+    } catch (error) {
+      console.error('Failed to update ban status:', error);
+      toast({
+        title: "Error",
+        description: `Failed to ${ban ? 'ban' : 'unban'} user`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBanning(false);
+    }
+  };
 
   if (!userId) {
     return (
@@ -52,6 +78,40 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
       </div>
     );
   }
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Users
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
+            <p className="text-gray-600 mt-1">Loading...</p>
+          </div>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-96 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="p-6">
+        <p className="text-gray-500">User not found</p>
+      </div>
+    );
+  }
+
+  const { user, profile, security_answers, transaction_pin, transactions } = userProfile;
+  
+  // Check if user is banned by looking at their status
+  const isBanned = profile.verified === false; // You may need to adjust this based on your ban logic
 
   return (
     <div className="p-6 space-y-6">
@@ -85,11 +145,11 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
               <div className="text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-xl font-bold text-blue-600">
-                    {user.firstName[0]}{user.lastName[0]}
+                    {profile.first_name[0]}{profile.last_name[0]}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {user.firstName} {user.lastName}
+                  {profile.first_name} {profile.last_name}
                 </h3>
                 <p className="text-gray-500">@{user.username}</p>
               </div>
@@ -98,7 +158,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Status:</span>
                   <div className="flex space-x-2">
-                    {user.verified ? (
+                    {profile.verified ? (
                       <Badge variant="outline" className="border-green-200 text-green-700">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Verified
@@ -108,7 +168,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                         Unverified
                       </Badge>
                     )}
-                    {user.banned && (
+                    {isBanned && (
                       <Badge variant="destructive">
                         <Ban className="w-3 h-3 mr-1" />
                         Banned
@@ -118,38 +178,29 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Account Type:</span>
-                  <Badge variant={user.accountType === 'Premium' ? 'default' : 'secondary'}>
-                    {user.accountType}
+                  <Badge variant={profile.account_type === 'Premium' ? 'default' : 'secondary'}>
+                    {profile.account_type}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Balance:</span>
-                  <span className="font-medium text-gray-900">{user.balance}</span>
+                  <span className="font-medium text-gray-900">${profile.balance}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Join Date:</span>
-                  <span className="text-gray-900">{user.joinDate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Last Login:</span>
-                  <span className="text-gray-900">{user.lastLogin}</span>
+                  <span className="text-sm text-gray-600">Pending Balance:</span>
+                  <span className="font-medium text-gray-900">${profile.pending_balance}</span>
                 </div>
               </div>
 
-              <div className="flex space-x-2 pt-4">
+              <div className="pt-4">
                 <Button 
-                  variant={user.verified ? "outline" : "default"} 
+                  variant={isBanned ? "outline" : "destructive"} 
                   size="sm" 
-                  className="flex-1"
+                  className="w-full"
+                  onClick={() => handleBanUser(!isBanned)}
+                  disabled={isBanning}
                 >
-                  {user.verified ? 'Unverify' : 'Verify'}
-                </Button>
-                <Button 
-                  variant={user.banned ? "outline" : "destructive"} 
-                  size="sm" 
-                  className="flex-1"
-                >
-                  {user.banned ? 'Unban' : 'Ban'}
+                  {isBanning ? 'Processing...' : (isBanned ? 'Unban User' : 'Ban User')}
                 </Button>
               </div>
             </CardContent>
@@ -158,9 +209,8 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="personal" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="account">Account Info</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
             </TabsList>
@@ -174,10 +224,28 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <Label htmlFor="title">Title</Label>
+                      <Input 
+                        id="title" 
+                        value={profile.title} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
                       <Input 
                         id="firstName" 
-                        value={user.firstName} 
+                        value={profile.first_name} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="middleName">Middle Name</Label>
+                      <Input 
+                        id="middleName" 
+                        value={profile.middle_name} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
@@ -186,7 +254,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                       <Label htmlFor="lastName">Last Name</Label>
                       <Input 
                         id="lastName" 
-                        value={user.lastName} 
+                        value={profile.last_name} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
@@ -195,7 +263,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                       <Label htmlFor="email">Email Address</Label>
                       <Input 
                         id="email" 
-                        value={user.email} 
+                        value={profile.email} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
@@ -204,7 +272,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                       <Label htmlFor="phone">Phone Number</Label>
                       <Input 
                         id="phone" 
-                        value={user.phone} 
+                        value={profile.phone_number} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
@@ -214,67 +282,92 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                       <Input 
                         id="dob" 
                         type="date" 
-                        value={user.dateOfBirth} 
+                        value={profile.date_of_birth} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="occupation">Occupation</Label>
+                      <Input 
+                        id="occupation" 
+                        value={profile.occupation} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ssn">SSN</Label>
+                      <Input 
+                        id="ssn" 
+                        value={profile.ssn} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="idType">ID Type</Label>
+                      <Input 
+                        id="idType" 
+                        value={profile.id_type} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="idNumber">ID Number</Label>
+                      <Input 
+                        id="idNumber" 
+                        value={profile.id_number} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="accountNumber">Account Number</Label>
+                      <Input 
+                        id="accountNumber" 
+                        value={profile.account_number} 
+                        readOnly
+                        className="bg-gray-50"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">Street Address</Label>
                     <Input 
                       id="address" 
-                      value={user.address} 
+                      value={profile.street_address} 
                       readOnly={!isEditing}
                       className={!isEditing ? "bg-gray-50" : ""}
                     />
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="account">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Information</CardTitle>
-                  <CardDescription>Account settings and preferences</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="city">City</Label>
                       <Input 
-                        id="username" 
-                        value={user.username} 
+                        id="city" 
+                        value={profile.city} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="accountType">Account Type</Label>
+                      <Label htmlFor="state">State</Label>
                       <Input 
-                        id="accountType" 
-                        value={user.accountType} 
+                        id="state" 
+                        value={profile.state} 
                         readOnly={!isEditing}
                         className={!isEditing ? "bg-gray-50" : ""}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="balance">Current Balance</Label>
+                      <Label htmlFor="zipCode">Zip Code</Label>
                       <Input 
-                        id="balance" 
-                        value={user.balance} 
-                        readOnly
-                        className="bg-gray-50"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="joinDate">Join Date</Label>
-                      <Input 
-                        id="joinDate" 
-                        value={user.joinDate} 
-                        readOnly
-                        className="bg-gray-50"
+                        id="zipCode" 
+                        value={profile.zip_code} 
+                        readOnly={!isEditing}
+                        className={!isEditing ? "bg-gray-50" : ""}
                       />
                     </div>
                   </div>
@@ -301,26 +394,29 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {transactions.map((tx) => (
-                          <tr key={tx.id} className="border-b border-gray-100">
-                            <td className="p-3 text-gray-900">{tx.date}</td>
-                            <td className="p-3 text-gray-900">{tx.type}</td>
-                            <td className={`p-3 font-medium ${
-                              tx.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {tx.amount}
+                        {transactions.map((tx, index) => (
+                          <tr key={index} className="border-b border-gray-100">
+                            <td className="p-3 text-gray-900">{tx.Date}</td>
+                            <td className="p-3 text-gray-900">{tx.Type}</td>
+                            <td className="p-3 font-medium text-green-600">
+                              ${tx.Amount}
                             </td>
                             <td className="p-3">
-                              <Badge variant={tx.status === 'Completed' ? 'default' : 'secondary'}>
-                                {tx.status}
+                              <Badge variant={tx.Status === 'APPROVED' ? 'default' : 'secondary'}>
+                                {tx.Status}
                               </Badge>
                             </td>
-                            <td className="p-3 text-gray-600">{tx.recipient}</td>
+                            <td className="p-3 text-gray-600">{tx.Details}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
+                  {transactions.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No transactions found.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -329,18 +425,20 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
               <Card>
                 <CardHeader>
                   <CardTitle>Security Information</CardTitle>
-                  <CardDescription>Security questions and transaction PIN</CardDescription>
+                  <CardDescription>Security answers and transaction PIN</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">Security Questions</h4>
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">Security Answers</h4>
                     <div className="space-y-4">
-                      {user.securityQuestions.map((sq, index) => (
-                        <div key={index} className="space-y-2">
-                          <Label>{sq.question}</Label>
-                          <Input value={sq.answer} readOnly className="bg-gray-50" />
-                        </div>
-                      ))}
+                      <div className="space-y-2">
+                        <Label>Answer 1</Label>
+                        <Input value={security_answers.ans1} readOnly className="bg-gray-50" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Answer 2</Label>
+                        <Input value={security_answers.ans2} readOnly className="bg-gray-50" />
+                      </div>
                     </div>
                   </div>
                   
@@ -351,12 +449,25 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                       <div className="flex space-x-4">
                         <Input 
                           id="transactionPin" 
-                          value={user.transactionPin} 
+                          value={transaction_pin.transfer_pin} 
                           readOnly 
                           className="bg-gray-50 max-w-32"
                         />
                         <Button variant="outline" size="sm">Reset PIN</Button>
                       </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">OTP Information</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="currentOtp">Current OTP</Label>
+                      <Input 
+                        id="currentOtp" 
+                        value={userProfile.otp.otp} 
+                        readOnly 
+                        className="bg-gray-50 max-w-32"
+                      />
                     </div>
                   </div>
                 </CardContent>
