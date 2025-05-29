@@ -1,3 +1,4 @@
+
 const BASE_URL = 'https://banking.pythonanywhere.com';
 
 interface LoginRequest {
@@ -72,12 +73,12 @@ interface UserProfile {
     ans1: string;
     ans2: string;
     user: number;
-  };
+  } | null;
   transaction_pin: {
     id: number;
     transfer_pin: number;
     user: number;
-  };
+  } | null;
   otp: {
     user: number;
     otp: string;
@@ -202,19 +203,6 @@ class ApiService {
 
     if (!response.ok) {
       throw new Error('Failed to update ban status');
-    }
-
-    return response.json();
-  }
-
-  async verifyUser(userId: number): Promise<{ detail: string }> {
-    const response = await fetch(`${BASE_URL}/super/verify-user/${userId}/`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to verify user');
     }
 
     return response.json();
