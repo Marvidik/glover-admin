@@ -1,4 +1,3 @@
-
 const BASE_URL = 'https://banking.pythonanywhere.com';
 
 interface LoginRequest {
@@ -65,6 +64,7 @@ interface UserProfile {
     account_type: string;
     balance: string;
     pending_balance: string;
+    status: string;
     user: number;
   };
   security_answers: {

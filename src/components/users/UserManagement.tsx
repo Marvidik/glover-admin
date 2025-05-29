@@ -124,7 +124,6 @@ const UserManagement = ({ onUserSelect }: UserManagementProps) => {
                   <th className="text-left p-4 font-medium text-gray-900">Account Type</th>
                   <th className="text-left p-4 font-medium text-gray-900">Status</th>
                   <th className="text-left p-4 font-medium text-gray-900">Balance</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Join Date</th>
                   <th className="text-left p-4 font-medium text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -148,10 +147,7 @@ const UserManagement = ({ onUserSelect }: UserManagementProps) => {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <span className="font-medium text-gray-900">{user.balance}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-gray-600">{user.join_date}</span>
+                      <span className="font-medium text-gray-900">${user.balance}</span>
                     </td>
                     <td className="p-4">
                       <Button
