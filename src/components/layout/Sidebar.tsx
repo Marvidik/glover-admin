@@ -9,9 +9,11 @@ import {
   Ban, 
   Key, 
   LogOut,
-  Building
+  Building,
+  Settings
 } from 'lucide-react';
 import { PageType } from './DashboardLayout';
+import { apiService } from '@/services/api';
 
 interface SidebarProps {
   currentPage: PageType;
@@ -25,7 +27,13 @@ const Sidebar = ({ currentPage, onPageChange }: SidebarProps) => {
     { id: 'transactions' as PageType, label: 'Transactions', icon: CreditCard },
     { id: 'bans' as PageType, label: 'Ban Management', icon: Ban },
     { id: 'otps' as PageType, label: 'Security & OTPs', icon: Key },
+    { id: 'pincodes' as PageType, label: 'PIN & Codes', icon: Settings },
   ];
+
+  const handleLogout = () => {
+    apiService.logout();
+    window.location.reload();
+  };
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -66,7 +74,7 @@ const Sidebar = ({ currentPage, onPageChange }: SidebarProps) => {
         <Button
           variant="ghost"
           className="w-full justify-start space-x-3 text-red-600 hover:bg-red-50 hover:text-red-700"
-          onClick={() => window.location.reload()}
+          onClick={handleLogout}
         >
           <LogOut className="w-5 h-5" />
           <span>Logout</span>

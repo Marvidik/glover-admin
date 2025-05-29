@@ -1,11 +1,79 @@
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle, DollarSign, Clock, Ban, TrendingUp, CreditCard } from 'lucide-react';
+import { apiService, DashboardMetrics } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 
 const DashboardHome = () => {
-  const metrics = [
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await apiService.getDashboardMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard metrics:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard metrics",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, [toast]);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Loading dashboard data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Failed to load dashboard data</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const metricsData = [
     {
       title: 'Total Users',
-      value: '12,847',
+      value: metrics.total_users.toLocaleString(),
       change: '+2.5%',
       icon: Users,
       color: 'text-blue-600',
@@ -13,7 +81,7 @@ const DashboardHome = () => {
     },
     {
       title: 'Verified Accounts',
-      value: '11,203',
+      value: metrics.verified_accounts.toLocaleString(),
       change: '+1.8%',
       icon: CheckCircle,
       color: 'text-green-600',
@@ -21,7 +89,7 @@ const DashboardHome = () => {
     },
     {
       title: 'Total Balance',
-      value: '$8.2M',
+      value: metrics.total_balance,
       change: '+12.3%',
       icon: DollarSign,
       color: 'text-emerald-600',
@@ -29,7 +97,7 @@ const DashboardHome = () => {
     },
     {
       title: 'Pending Transactions',
-      value: '143',
+      value: metrics.pending_transactions.toString(),
       change: '-5.2%',
       icon: Clock,
       color: 'text-orange-600',
@@ -37,7 +105,7 @@ const DashboardHome = () => {
     },
     {
       title: 'Banned Users',
-      value: '87',
+      value: metrics.banned_users.toString(),
       change: '+0.8%',
       icon: Ban,
       color: 'text-red-600',
@@ -45,19 +113,12 @@ const DashboardHome = () => {
     },
     {
       title: 'Monthly Growth',
-      value: '15.4%',
+      value: `${metrics.monthly_growth_percent}%`,
       change: '+3.1%',
       icon: TrendingUp,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
-  ];
-
-  const recentActivity = [
-    { id: 1, user: 'John Smith', action: 'Account verified', time: '2 hours ago', status: 'success' },
-    { id: 2, user: 'Sarah Johnson', action: 'Large transfer pending', time: '3 hours ago', status: 'warning' },
-    { id: 3, user: 'Mike Wilson', action: 'Account banned', time: '5 hours ago', status: 'error' },
-    { id: 4, user: 'Emily Davis', action: 'New registration', time: '6 hours ago', status: 'info' },
   ];
 
   return (
@@ -73,7 +134,7 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {metrics.map((metric, index) => (
+        {metricsData.map((metric, index) => (
           <Card key={index} className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
@@ -96,37 +157,6 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest user activities and system events</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-4">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.status === 'success' ? 'bg-green-500' :
-                    activity.status === 'warning' ? 'bg-orange-500' :
-                    activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.user}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate">
-                      {activity.action}
-                    </p>
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    {activity.time}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>

@@ -7,8 +7,9 @@ import UserProfile from '@/components/users/UserProfile';
 import TransactionManagement from '@/components/transactions/TransactionManagement';
 import BanManagement from '@/components/bans/BanManagement';
 import OTPManagement from '@/components/security/OTPManagement';
+import PinCodeManagement from '@/components/security/PinCodeManagement';
 
-export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'bans' | 'security' | 'otps';
+export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'bans' | 'security' | 'otps' | 'pincodes';
 
 const DashboardLayout = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
@@ -31,6 +32,8 @@ const DashboardLayout = () => {
         return <BanManagement />;
       case 'otps':
         return <OTPManagement />;
+      case 'pincodes':
+        return <PinCodeManagement />;
       default:
         return <DashboardHome />;
     }

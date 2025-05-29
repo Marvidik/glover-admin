@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Eye, Ban, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, Eye } from 'lucide-react';
+import { apiService, User } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserManagementProps {
   onUserSelect: (userId: string) => void;
@@ -14,60 +16,64 @@ interface UserManagementProps {
 const UserManagement = ({ onUserSelect }: UserManagementProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock user data
-  const users = [
-    {
-      id: '1',
-      username: 'johnsmith',
-      email: 'john.smith@email.com',
-      accountType: 'Premium',
-      verified: true,
-      banned: false,
-      balance: '$12,450.00',
-      joinDate: '2024-01-15',
-    },
-    {
-      id: '2',
-      username: 'sarahjohnson',
-      email: 'sarah.j@email.com',
-      accountType: 'Standard',
-      verified: false,
-      banned: false,
-      balance: '$3,200.00',
-      joinDate: '2024-02-20',
-    },
-    {
-      id: '3',
-      username: 'mikewilson',
-      email: 'mike.wilson@email.com',
-      accountType: 'Standard',
-      verified: true,
-      banned: true,
-      balance: '$0.00',
-      joinDate: '2024-01-30',
-    },
-    {
-      id: '4',
-      username: 'emilydavis',
-      email: 'emily.davis@email.com',
-      accountType: 'Premium',
-      verified: true,
-      banned: false,
-      balance: '$8,750.00',
-      joinDate: '2024-03-10',
-    },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await apiService.getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load users",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [toast]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (filter === 'verified') return matchesSearch && user.verified;
-    if (filter === 'unverified') return matchesSearch && !user.verified;
-    if (filter === 'banned') return matchesSearch && user.banned;
+    if (filter === 'active') return matchesSearch && user.status === 'Active';
+    if (filter === 'premium') return matchesSearch && user.account_type === 'Premium';
+    if (filter === 'joint') return matchesSearch && user.account_type === 'Joint';
     return matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-600 mt-1">Loading users...</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -103,9 +109,9 @@ const UserManagement = ({ onUserSelect }: UserManagementProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Users</SelectItem>
-                <SelectItem value="verified">Verified Only</SelectItem>
-                <SelectItem value="unverified">Unverified Only</SelectItem>
-                <SelectItem value="banned">Banned Users</SelectItem>
+                <SelectItem value="active">Active Only</SelectItem>
+                <SelectItem value="premium">Premium Accounts</SelectItem>
+                <SelectItem value="joint">Joint Accounts</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -132,42 +138,26 @@ const UserManagement = ({ onUserSelect }: UserManagementProps) => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <Badge variant={user.accountType === 'Premium' ? 'default' : 'secondary'}>
-                        {user.accountType}
+                      <Badge variant={user.account_type === 'Premium' ? 'default' : 'secondary'}>
+                        {user.account_type}
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <div className="flex space-x-2">
-                        {user.verified ? (
-                          <Badge variant="outline" className="border-green-200 text-green-700">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-orange-200 text-orange-700">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Unverified
-                          </Badge>
-                        )}
-                        {user.banned && (
-                          <Badge variant="destructive">
-                            <Ban className="w-3 h-3 mr-1" />
-                            Banned
-                          </Badge>
-                        )}
-                      </div>
+                      <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
+                        {user.status}
+                      </Badge>
                     </td>
                     <td className="p-4">
                       <span className="font-medium text-gray-900">{user.balance}</span>
                     </td>
                     <td className="p-4">
-                      <span className="text-gray-600">{user.joinDate}</span>
+                      <span className="text-gray-600">{user.join_date}</span>
                     </td>
                     <td className="p-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onUserSelect(user.id)}
+                        onClick={() => onUserSelect(user.id.toString())}
                         className="flex items-center space-x-1"
                       >
                         <Eye className="w-4 h-4" />
