@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, CheckCircle, Ban, Edit, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Ban, Edit, Save, Shield } from 'lucide-react';
 import { apiService, UserProfile as UserProfileType } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +20,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
   const [userProfile, setUserProfile] = useState<UserProfileType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBanning, setIsBanning] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,6 +35,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
     try {
       setIsLoading(true);
       const data = await apiService.getUserProfile(Number(userId));
+      console.log('User profile data:', data);
       setUserProfile(data);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
@@ -67,6 +70,30 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
       });
     } finally {
       setIsBanning(false);
+    }
+  };
+
+  const handleVerifyUser = async () => {
+    if (!userId) return;
+    
+    try {
+      setIsVerifying(true);
+      await apiService.verifyUser(Number(userId));
+      toast({
+        title: "Success",
+        description: "User verified successfully",
+      });
+      // Refresh user profile to get updated data
+      fetchUserProfile();
+    } catch (error) {
+      console.error('Failed to verify user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to verify user",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -109,8 +136,8 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
 
   const { user, profile, security_answers, transaction_pin, otp, transactions } = userProfile;
   
-  // Check if user is banned (you may need to adjust this based on your ban logic)
-  const isBanned = profile.verified === false;
+  // Check if user is banned based on status
+  const isBanned = profile.status === 'Banned';
 
   return (
     <div className="p-6 space-y-6">
@@ -191,7 +218,19 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-4 space-y-2">
+                {!profile.verified && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                    onClick={handleVerifyUser}
+                    disabled={isVerifying}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    {isVerifying ? 'Verifying...' : 'Verify User'}
+                  </Button>
+                )}
                 <Button 
                   variant={isBanned ? "outline" : "destructive"} 
                   size="sm" 
