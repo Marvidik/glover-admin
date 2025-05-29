@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CheckCircle, DollarSign, Clock, Ban, TrendingUp } from 'lucide-react';
+import { Users, CheckCircle, DollarSign, Clock, Ban, TrendingUp, CreditCard } from 'lucide-react';
 
 const DashboardHome = () => {
   const metrics = [
