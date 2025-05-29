@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,10 +107,10 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
     );
   }
 
-  const { user, profile, security_answers, transaction_pin, transactions } = userProfile;
+  const { user, profile, security_answers, transaction_pin, otp, transactions } = userProfile;
   
-  // Check if user is banned by looking at their status
-  const isBanned = profile.verified === false; // You may need to adjust this based on your ban logic
+  // Check if user is banned (you may need to adjust this based on your ban logic)
+  const isBanned = profile.verified === false;
 
   return (
     <div className="p-6 space-y-6">
@@ -458,18 +457,20 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">OTP Information</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="currentOtp">Current OTP</Label>
-                      <Input 
-                        id="currentOtp" 
-                        value={userProfile.otp.otp} 
-                        readOnly 
-                        className="bg-gray-50 max-w-32"
-                      />
+                  {otp && (
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">OTP Information</h4>
+                      <div className="space-y-2">
+                        <Label htmlFor="currentOtp">Current OTP</Label>
+                        <Input 
+                          id="currentOtp" 
+                          value={otp.otp} 
+                          readOnly 
+                          className="bg-gray-50 max-w-32"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
