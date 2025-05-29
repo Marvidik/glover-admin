@@ -468,32 +468,44 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
                 <CardContent className="space-y-6">
                   <div>
                     <h4 className="text-lg font-medium text-gray-900 mb-4">Security Answers</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Answer 1</Label>
-                        <Input value={security_answers.ans1} readOnly className="bg-gray-50" />
+                    {security_answers ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Answer 1</Label>
+                          <Input value={security_answers.ans1} readOnly className="bg-gray-50" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Answer 2</Label>
+                          <Input value={security_answers.ans2} readOnly className="bg-gray-50" />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Answer 2</Label>
-                        <Input value={security_answers.ans2} readOnly className="bg-gray-50" />
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-500">No security answers configured</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                   
                   <div>
                     <h4 className="text-lg font-medium text-gray-900 mb-4">Transaction PIN</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionPin">Current PIN</Label>
-                      <div className="flex space-x-4">
-                        <Input 
-                          id="transactionPin" 
-                          value={transaction_pin.transfer_pin} 
-                          readOnly 
-                          className="bg-gray-50 max-w-32"
-                        />
-                        <Button variant="outline" size="sm">Reset PIN</Button>
+                    {transaction_pin ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="transactionPin">Current PIN</Label>
+                        <div className="flex space-x-4">
+                          <Input 
+                            id="transactionPin" 
+                            value={transaction_pin.transfer_pin} 
+                            readOnly 
+                            className="bg-gray-50 max-w-32"
+                          />
+                          <Button variant="outline" size="sm">Reset PIN</Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-500">No transaction PIN configured</p>
+                      </div>
+                    )}
                   </div>
 
                   {otp && (
