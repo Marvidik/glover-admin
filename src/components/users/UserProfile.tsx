@@ -78,6 +78,7 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
     
     try {
       setIsVerifying(true);
+      console.log('Verifying user:', userId);
       await apiService.verifyUser(Number(userId));
       toast({
         title: "Success",
@@ -134,10 +135,10 @@ const UserProfile = ({ userId, onBack }: UserProfileProps) => {
     );
   }
 
-  const { user, profile, security_answers, transaction_pin, otp, transactions } = userProfile;
+  const { user, profile, security_answers, transaction_pin, otp, transactions, ban_status } = userProfile;
   
-  // Check if user is banned - check both status types for reliability
-  const isBanned = profile.status === 'Banned' || profile.status === 'banned' || profile.status === 'BANNED';
+  // Use the ban_status from the API response
+  const isBanned = ban_status?.ban || false;
 
   return (
     <div className="p-6 space-y-6">
