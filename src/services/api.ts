@@ -214,7 +214,7 @@ class ApiService {
 
   async verifyUser(userId: number): Promise<{ detail: string }> {
     const response = await fetch(`${BASE_URL}/super/verify-user/${userId}/`, {
-      method: 'POST',
+      method: 'PATCH',
       headers: this.getHeaders(),
     });
 
