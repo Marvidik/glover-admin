@@ -128,6 +128,10 @@ class ApiService {
     this.token = localStorage.getItem('auth_token');
   }
 
+  getBaseUrl() {
+    return BASE_URL;
+  }
+
   private getHeaders() {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

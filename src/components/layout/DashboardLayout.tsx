@@ -5,9 +5,10 @@ import DashboardHome from '@/components/dashboard/DashboardHome';
 import UserManagement from '@/components/users/UserManagement';
 import UserProfile from '@/components/users/UserProfile';
 import TransactionManagement from '@/components/transactions/TransactionManagement';
+import CreateTransaction from '@/components/transactions/CreateTransaction';
 import PinCodeManagement from '@/components/security/PinCodeManagement';
 
-export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'pincodes';
+export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'create-transaction' | 'pincodes';
 
 const DashboardLayout = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
@@ -25,7 +26,9 @@ const DashboardLayout = () => {
       case 'profile':
         return <UserProfile userId={selectedUserId} onBack={() => setCurrentPage('users')} />;
       case 'transactions':
-        return <TransactionManagement />;
+        return <TransactionManagement onCreateTransaction={() => setCurrentPage('create-transaction')} />;
+      case 'create-transaction':
+        return <CreateTransaction onBack={() => setCurrentPage('transactions')} />;
       case 'pincodes':
         return <PinCodeManagement />;
       default:

@@ -1,332 +1,237 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Filter, Eye, Check, X, Clock } from 'lucide-react';
-import { apiService, Transaction } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { apiService } from '@/services/api';
+import type { Transaction } from '@/services/api';
+import { Plus, Eye, Check, Clock, X } from 'lucide-react';
 
-const TransactionManagement = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isApproving, setIsApproving] = useState<number | null>(null);
+interface TransactionManagementProps {
+  onCreateTransaction: () => void;
+}
+
+const TransactionManagement = ({ onCreateTransaction }: TransactionManagementProps) => {
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
+  const { data: transactions, isLoading } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => apiService.getTransactions(),
+  });
 
-  const fetchTransactions = async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiService.getTransactions();
-      console.log('Transactions data:', data);
-      setTransactions(data);
-    } catch (error) {
-      console.error('Failed to fetch transactions:', error);
+  const approveMutation = useMutation({
+    mutationFn: (transactionId: number) => apiService.approveTransaction(transactionId),
+    onSuccess: () => {
       toast({
-        title: "Error",
-        description: "Failed to load transactions",
-        variant: "destructive",
+        title: 'Success',
+        description: 'Transaction approved successfully',
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.id.toString().includes(searchTerm) ||
-                         transaction.recipient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.recipient_account_number.includes(searchTerm);
-    
-    const matchesStatus = statusFilter === 'all' || transaction.status_type.toLowerCase() === statusFilter;
-    const matchesType = typeFilter === 'all' || transaction.transaction_type.toLowerCase().includes(typeFilter.toLowerCase());
-    
-    return matchesSearch && matchesStatus && matchesType;
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setSelectedTransaction(null);
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to approve transaction',
+        variant: 'destructive',
+      });
+    },
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'PENDING':
-        return <Badge variant="outline" className="border-orange-200 text-orange-700"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'APPROVED':
-        return <Badge variant="outline" className="border-green-200 text-green-700"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
-      case 'REJECTED':
-        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Approved</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejected</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const handleApprove = async (transactionId: number) => {
-    try {
-      setIsApproving(transactionId);
-      await apiService.approveTransaction(transactionId);
-      toast({
-        title: "Success",
-        description: "Transaction approved successfully",
-      });
-      // Refresh transactions
-      fetchTransactions();
-    } catch (error) {
-      console.error('Failed to approve transaction:', error);
-      toast({
-        title: "Error",
-        description: "Failed to approve transaction",
-        variant: "destructive",
-      });
-    } finally {
-      setIsApproving(null);
-    }
-  };
-
-  const handleReject = (transactionId: number) => {
-    console.log('Rejecting transaction:', transactionId);
-    // API call would go here - not provided in requirements
-    toast({
-      title: "Info",
-      description: "Reject functionality not yet implemented",
-    });
-  };
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Transaction Management</h1>
-            <p className="text-gray-600 mt-1">Loading transactions...</p>
+      <div className="p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
           </div>
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6">
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Transaction Management</h1>
-          <p className="text-gray-600 mt-1">Review and manage money transfers</p>
+          <p className="text-gray-600 mt-2">Manage and approve user transactions</p>
         </div>
+        <Button onClick={onCreateTransaction} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Transaction
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Transactions</CardTitle>
-          <CardDescription>
-            Monitor and approve pending transactions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by transaction ID, recipient name, or account number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="international">International</SelectItem>
-                <SelectItem value="commerzeciti">Commerzeciti</SelectItem>
-                <SelectItem value="received">Received</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left p-4 font-medium text-gray-900">Transaction ID</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Recipient</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Account Number</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Amount</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Type</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Status</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Date</th>
-                  <th className="text-left p-4 font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="p-4">
-                      <span className="font-medium text-blue-600">TXN{transaction.id.toString().padStart(3, '0')}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-gray-900">{transaction.recipient_name}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-gray-900">{transaction.recipient_account_number}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className="font-medium text-gray-900">${transaction.amount}</span>
-                    </td>
-                    <td className="p-4">
-                      <Badge variant="outline">{transaction.transaction_type}</Badge>
-                    </td>
-                    <td className="p-4">
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Transactions</CardTitle>
+            <CardDescription>
+              {transactions?.length || 0} transactions found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {transactions?.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold">{transaction.recipient_name}</h3>
                       {getStatusBadge(transaction.status_type)}
-                    </td>
-                    <td className="p-4">
-                      <span className="text-gray-600">{formatDate(transaction.date)}</span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex space-x-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Transaction Details</DialogTitle>
-                              <DialogDescription>
-                                Complete information for transaction TXN{transaction.id.toString().padStart(3, '0')}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Recipient</Label>
-                                  <p className="text-sm text-gray-900">{transaction.recipient_name}</p>
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Amount</Label>
-                                  <p className="text-sm font-medium text-gray-900">${transaction.amount}</p>
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Account Number</Label>
-                                  <p className="text-sm text-gray-900">{transaction.recipient_account_number}</p>
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Type</Label>
-                                  <p className="text-sm text-gray-900">{transaction.transaction_type}</p>
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Routing Number</Label>
-                                  <p className="text-sm text-gray-900">{transaction.recipient_routing_number || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-600">Status</Label>
-                                  <div className="mt-1">{getStatusBadge(transaction.status_type)}</div>
-                                </div>
-                              </div>
-                              <div>
-                                <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
-                                <p className="text-sm text-gray-900">{transaction.recipient_bank_name || 'N/A'}</p>
-                              </div>
-                              <div>
-                                <Label className="text-sm font-medium text-gray-600">Date & Time</Label>
-                                <p className="text-sm text-gray-900">{formatDate(transaction.date)}</p>
-                              </div>
-                              
-                              {transaction.status_type.toUpperCase() === 'PENDING' && (
-                                <div className="flex space-x-2 pt-4">
-                                  <Button 
-                                    variant="default" 
-                                    size="sm" 
-                                    onClick={() => handleApprove(transaction.id)}
-                                    disabled={isApproving === transaction.id}
-                                    className="flex-1"
-                                  >
-                                    <Check className="w-4 h-4 mr-1" />
-                                    {isApproving === transaction.id ? 'Approving...' : 'Approve'}
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm" 
-                                    onClick={() => handleReject(transaction.id)}
-                                    className="flex-1"
-                                  >
-                                    <X className="w-4 h-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                        
-                        {transaction.status_type.toUpperCase() === 'PENDING' && (
-                          <>
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              onClick={() => handleApprove(transaction.id)}
-                              disabled={isApproving === transaction.id}
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm" 
-                              onClick={() => handleReject(transaction.id)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No transactions found matching your criteria.</p>
+                      <span className="text-sm text-gray-500">
+                        {transaction.transaction_type}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Account: {transaction.recipient_account_number}</p>
+                      <p>Bank: {transaction.recipient_bank_name}</p>
+                      <p>Date: {formatDate(transaction.date)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-green-600">
+                        ${parseFloat(transaction.amount).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedTransaction(transaction)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {transaction.status_type.toLowerCase() === 'pending' && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => approveMutation.mutate(transaction.id)}
+                          disabled={approveMutation.isPending}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {transactions?.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No transactions found
+                </div>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Transaction Details Modal */}
+        {selectedTransaction && (
+          <Card className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Transaction Details</CardTitle>
+                  <CardDescription>ID: {selectedTransaction.id}</CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedTransaction(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Recipient Name</label>
+                    <p className="font-semibold">{selectedTransaction.recipient_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Amount</label>
+                    <p className="font-semibold text-green-600">
+                      ${parseFloat(selectedTransaction.amount).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Account Number</label>
+                    <p>{selectedTransaction.recipient_account_number}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Routing Number</label>
+                    <p>{selectedTransaction.recipient_routing_number}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Bank Name</label>
+                    <p>{selectedTransaction.recipient_bank_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Transaction Type</label>
+                    <p>{selectedTransaction.transaction_type}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Status</label>
+                    <div className="mt-1">{getStatusBadge(selectedTransaction.status_type)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date</label>
+                    <p>{formatDate(selectedTransaction.date)}</p>
+                  </div>
+                </div>
+                
+                {selectedTransaction.status_type.toLowerCase() === 'pending' && (
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button
+                      onClick={() => approveMutation.mutate(selectedTransaction.id)}
+                      disabled={approveMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      {approveMutation.isPending ? 'Approving...' : 'Approve Transaction'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
