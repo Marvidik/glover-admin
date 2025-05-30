@@ -17,8 +17,8 @@ import { ArrowLeft, Send } from 'lucide-react';
 const transactionSchema = z.object({
   recipient_name: z.string().min(1, 'Recipient name is required'),
   recipient_account_number: z.string().min(1, 'Account number is required'),
-  routing_number: z.string().min(1, 'Routing number is required'),
-  bank_name: z.string().min(1, 'Bank name is required'),
+  recipient_routing_number: z.string().min(1, 'Routing number is required'),
+  recipient_bank_name: z.string().min(1, 'Bank name is required'),
   swift_code: z.string().min(1, 'SWIFT code is required'),
   amount: z.string().min(1, 'Amount is required').refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Amount must be a positive number'),
   transaction_type: z.enum(['Received', 'Local', 'International', 'Inter-bank', 'ATM']),
@@ -42,8 +42,8 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
     defaultValues: {
       recipient_name: '',
       recipient_account_number: '',
-      routing_number: '',
-      bank_name: '',
+      recipient_routing_number: '',
+      recipient_bank_name: '',
       swift_code: '',
       amount: '',
       transaction_type: 'Local',
@@ -61,21 +61,16 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${apiService.getBaseUrl()}/super/transactions/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount),
-        }),
+      await apiService.createTransaction({
+        recipient_name: formData.recipient_name,
+        recipient_account_number: formData.recipient_account_number,
+        recipient_routing_number: formData.recipient_routing_number,
+        recipient_bank_name: formData.recipient_bank_name,
+        swift_code: formData.swift_code,
+        amount: parseFloat(formData.amount),
+        transaction_type: formData.transaction_type,
+        narration: formData.narration,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to create transaction');
-      }
 
       toast({
         title: 'Success',
@@ -86,6 +81,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
       setShowConfirmDialog(false);
       onBack();
     } catch (error) {
+      console.error('Transaction creation error:', error);
       toast({
         title: 'Error',
         description: 'Failed to create transaction. Please try again.',
@@ -155,7 +151,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
 
                 <FormField
                   control={form.control}
-                  name="routing_number"
+                  name="recipient_routing_number"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Routing Number</FormLabel>
@@ -169,7 +165,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
 
                 <FormField
                   control={form.control}
-                  name="bank_name"
+                  name="recipient_bank_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Bank Name</FormLabel>
@@ -295,7 +291,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                 </div>
                 <div>
                   <span className="font-medium">Bank:</span>
-                  <p>{formData.bank_name}</p>
+                  <p>{formData.recipient_bank_name}</p>
                 </div>
                 <div>
                   <span className="font-medium">Amount:</span>

@@ -121,15 +121,40 @@ interface LoginPin {
   pin: number;
 }
 
+interface CreateTransactionRequest {
+  user_id: number;
+  recipient_name: string;
+  recipient_account_number: string;
+  recipient_routing_number: string;
+  recipient_bank_name: string;
+  swift_code: string;
+  amount: number;
+  transaction_type: string;
+  narration: string;
+}
+
 class ApiService {
   private token: string | null = null;
+  private currentUser: { id: number; username: string; email: string } | null = null;
 
   constructor() {
     this.token = localStorage.getItem('auth_token');
+    const userStr = localStorage.getItem('current_user');
+    if (userStr) {
+      try {
+        this.currentUser = JSON.parse(userStr);
+      } catch (e) {
+        console.error('Failed to parse stored user data');
+      }
+    }
   }
 
   getBaseUrl() {
     return BASE_URL;
+  }
+
+  getCurrentUser() {
+    return this.currentUser;
   }
 
   private getHeaders() {
@@ -157,13 +182,17 @@ class ApiService {
 
     const data = await response.json();
     this.token = data.token;
+    this.currentUser = data.user;
     localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('current_user', JSON.stringify(data.user));
     return data;
   }
 
   logout() {
     this.token = null;
+    this.currentUser = null;
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
   }
 
   async getDashboardMetrics(): Promise<DashboardMetrics> {
@@ -266,6 +295,42 @@ class ApiService {
     return response.json();
   }
 
+  async verifyTransaction(transactionId: number): Promise<{ detail: string }> {
+    const response = await fetch(`${BASE_URL}/super/transactions/${transactionId}/verify/`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to verify transaction');
+    }
+
+    return response.json();
+  }
+
+  async createTransaction(transactionData: Omit<CreateTransactionRequest, 'user_id'>): Promise<{ detail: string }> {
+    if (!this.currentUser) {
+      throw new Error('No logged in user found');
+    }
+
+    const requestData: CreateTransactionRequest = {
+      ...transactionData,
+      user_id: this.currentUser.id,
+    };
+
+    const response = await fetch(`${BASE_URL}/super/transactions/create/`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create transaction');
+    }
+
+    return response.json();
+  }
+
   async getBankCodes(): Promise<BankCodes> {
     const response = await fetch(`${BASE_URL}/super/manage/codes/`, {
       headers: this.getHeaders(),
@@ -320,4 +385,4 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
-export type { User, UserProfile, Transaction, DashboardMetrics, BankCodes, LoginPin };
+export type { User, UserProfile, Transaction, DashboardMetrics, BankCodes, LoginPin, CreateTransactionRequest };
