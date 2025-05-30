@@ -1,5 +1,6 @@
 
-const BASE_URL = 'https://banking.pythonanywhere.com';
+
+const BASE_URL = 'http://127.0.0.1:8000';
 
 interface LoginRequest {
   username: string;
@@ -203,6 +204,19 @@ class ApiService {
 
     if (!response.ok) {
       throw new Error('Failed to update ban status');
+    }
+
+    return response.json();
+  }
+
+  async verifyUser(userId: number): Promise<{ detail: string }> {
+    const response = await fetch(`${BASE_URL}/super/verify-user/${userId}/`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to verify user');
     }
 
     return response.json();
