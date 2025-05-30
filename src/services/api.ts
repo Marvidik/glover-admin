@@ -1,4 +1,4 @@
-const BASE_URL = 'https://banking.pythonanywhere.com/';
+const BASE_URL = 'https://banking.pythonanywhere.com';
 
 interface LoginRequest {
   username: string;
