@@ -32,22 +32,22 @@ const DashboardHome = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Loading dashboard data...</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">Loading dashboard data...</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {[...Array(6)].map((_, index) => (
             <Card key={index} className="animate-pulse">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-gray-200 rounded-full"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-6 md:h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </CardContent>
             </Card>
@@ -59,11 +59,11 @@ const DashboardHome = () => {
 
   if (!metrics) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Failed to load dashboard data</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">Failed to load dashboard data</p>
           </div>
         </div>
       </div>
@@ -122,30 +122,30 @@ const DashboardHome = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1 text-sm md:text-base">Welcome back! Here's what's happening today.</p>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-xs md:text-sm text-gray-500">
           Last updated: {new Date().toLocaleTimeString()}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {metricsData.map((metric, index) => (
           <Card key={index} className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-xs md:text-sm font-medium text-gray-600">
                 {metric.title}
               </CardTitle>
-              <div className={`p-2 rounded-full ${metric.bgColor}`}>
-                <metric.icon className={`w-4 h-4 ${metric.color}`} />
+              <div className={`p-1.5 md:p-2 rounded-full ${metric.bgColor}`}>
+                <metric.icon className={`w-3 h-3 md:w-4 md:h-4 ${metric.color}`} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{metric.value}</div>
+              <div className="text-lg md:text-2xl font-bold text-gray-900">{metric.value}</div>
               <p className={`text-xs mt-1 ${
                 metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
               }`}>
@@ -156,29 +156,29 @@ const DashboardHome = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+            <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
+            <CardDescription className="text-sm">Common administrative tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Manage Users</p>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <button className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-600 mx-auto mb-2" />
+                <p className="text-xs md:text-sm font-medium text-gray-900">Manage Users</p>
               </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Clock className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Pending Reviews</p>
+              <button className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Clock className="w-5 h-5 md:w-6 md:h-6 text-orange-600 mx-auto mb-2" />
+                <p className="text-xs md:text-sm font-medium text-gray-900">Pending Reviews</p>
               </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <CreditCard className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Transactions</p>
+              <button className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-green-600 mx-auto mb-2" />
+                <p className="text-xs md:text-sm font-medium text-gray-900">Transactions</p>
               </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Ban className="w-6 h-6 text-red-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Security</p>
+              <button className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Ban className="w-5 h-5 md:w-6 md:h-6 text-red-600 mx-auto mb-2" />
+                <p className="text-xs md:text-sm font-medium text-gray-900">Security</p>
               </button>
             </div>
           </CardContent>

@@ -93,42 +93,44 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <div className="mb-4 md:mb-6">
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="mb-4"
+          className="mb-4 px-2 md:px-4"
+          size="sm"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Transactions
+          <span className="hidden sm:inline">Back to Transactions</span>
+          <span className="sm:hidden">Back</span>
         </Button>
         
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Transaction</h1>
-          <p className="text-gray-600 mt-2">Create a new bank transaction for processing</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Create Transaction</h1>
+          <p className="text-gray-600 mt-1 md:mt-2 text-sm md:text-base">Create a new bank transaction for processing</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Transaction Details</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg md:text-xl">Transaction Details</CardTitle>
+          <CardDescription className="text-sm">
             Fill in the transaction information below. All fields are required.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <FormField
                   control={form.control}
                   name="recipient_name"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Recipient Name</FormLabel>
+                    <FormItem className="md:col-span-2 lg:col-span-1">
+                      <FormLabel className="text-sm md:text-base">Recipient Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter recipient name" {...field} />
+                        <Input placeholder="Enter recipient name" {...field} className="h-10 md:h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -139,10 +141,10 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   control={form.control}
                   name="recipient_account_number"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Recipient Account Number</FormLabel>
+                    <FormItem className="md:col-span-2 lg:col-span-1">
+                      <FormLabel className="text-sm md:text-base">Recipient Account Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter account number" {...field} />
+                        <Input placeholder="Enter account number" {...field} className="h-10 md:h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -154,9 +156,9 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   name="recipient_routing_number"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Routing Number</FormLabel>
+                      <FormLabel className="text-sm md:text-base">Routing Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter routing number" {...field} />
+                        <Input placeholder="Enter routing number" {...field} className="h-10 md:h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -168,9 +170,9 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   name="recipient_bank_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bank Name</FormLabel>
+                      <FormLabel className="text-sm md:text-base">Bank Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter bank name" {...field} />
+                        <Input placeholder="Enter bank name" {...field} className="h-10 md:h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,9 +184,9 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   name="swift_code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SWIFT Code</FormLabel>
+                      <FormLabel className="text-sm md:text-base">SWIFT Code</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter SWIFT code" {...field} />
+                        <Input placeholder="Enter SWIFT code" {...field} className="h-10 md:h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,13 +198,14 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount ($)</FormLabel>
+                      <FormLabel className="text-sm md:text-base">Amount ($)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           step="0.01" 
                           placeholder="Enter amount" 
                           {...field} 
+                          className="h-10 md:h-11"
                         />
                       </FormControl>
                       <FormMessage />
@@ -214,11 +217,11 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   control={form.control}
                   name="transaction_type"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transaction Type</FormLabel>
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="text-sm md:text-base">Transaction Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-10 md:h-11">
                             <SelectValue placeholder="Select transaction type" />
                           </SelectTrigger>
                         </FormControl>
@@ -241,11 +244,11 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                 name="narration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Narration</FormLabel>
+                    <FormLabel className="text-sm md:text-base">Narration</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Enter transaction description or notes"
-                        className="min-h-[120px]"
+                        className="min-h-[100px] md:min-h-[120px] resize-none"
                         {...field} 
                       />
                     </FormControl>
@@ -254,10 +257,10 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                 )}
               />
 
-              <div className="flex justify-end pt-6">
+              <div className="flex justify-end pt-4 md:pt-6">
                 <Button 
                   type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                   disabled={isSubmitting}
                 >
                   <Send className="mr-2 h-4 w-4" />
@@ -270,32 +273,32 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
       </Card>
 
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm Transaction</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg md:text-xl">Confirm Transaction</DialogTitle>
+            <DialogDescription className="text-sm">
               Please review the transaction details before submitting.
             </DialogDescription>
           </DialogHeader>
           
           {formData && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-4 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-sm">
                 <div>
                   <span className="font-medium">Recipient:</span>
-                  <p>{formData.recipient_name}</p>
+                  <p className="break-words">{formData.recipient_name}</p>
                 </div>
                 <div>
                   <span className="font-medium">Account:</span>
-                  <p>{formData.recipient_account_number}</p>
+                  <p className="break-all">{formData.recipient_account_number}</p>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <span className="font-medium">Bank:</span>
-                  <p>{formData.recipient_bank_name}</p>
+                  <p className="break-words">{formData.recipient_bank_name}</p>
                 </div>
                 <div>
                   <span className="font-medium">Amount:</span>
-                  <p className="text-lg font-semibold text-green-600">${formData.amount}</p>
+                  <p className="text-base md:text-lg font-semibold text-green-600">${formData.amount}</p>
                 </div>
                 <div>
                   <span className="font-medium">Type:</span>
@@ -304,23 +307,24 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
               </div>
               <div>
                 <span className="font-medium">Narration:</span>
-                <p className="text-sm text-gray-600 mt-1">{formData.narration}</p>
+                <p className="text-sm text-gray-600 mt-1 break-words">{formData.narration}</p>
               </div>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               onClick={() => setShowConfirmDialog(false)}
               disabled={isSubmitting}
+              className="w-full sm:w-auto order-2 sm:order-1"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleConfirmSubmit}
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto order-1 sm:order-2"
             >
               {isSubmitting ? 'Creating...' : 'Confirm & Send'}
             </Button>

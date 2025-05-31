@@ -13,6 +13,7 @@ export type PageType = 'dashboard' | 'users' | 'profile' | 'transactions' | 'cre
 const DashboardLayout = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -37,9 +38,17 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="flex-1 overflow-y-auto">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Sidebar 
+        currentPage={currentPage} 
+        onPageChange={(page) => {
+          setCurrentPage(page);
+          setSidebarOpen(false); // Close mobile sidebar when navigating
+        }}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <main className="flex-1 overflow-y-auto w-full min-w-0">
         {renderPage()}
       </main>
     </div>
