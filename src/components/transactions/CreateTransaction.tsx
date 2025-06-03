@@ -65,7 +65,8 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
     try {
       // Convert datetime-local format to ISO string with Z timezone
       const dateObj = new Date(formData.date);
-      const isoDateString = dateObj.toISOString();
+      const isoDateString = new Date(formData.date + ':00Z').toISOString();
+
 
       await apiService.createTransaction({
         recipient_name: formData.recipient_name,
