@@ -131,6 +131,7 @@ interface CreateTransactionRequest {
   amount: number;
   transaction_type: string;
   narration: string;
+  date: string;
 }
 
 class ApiService {

@@ -23,6 +23,7 @@ const transactionSchema = z.object({
   amount: z.string().min(1, 'Amount is required').refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Amount must be a positive number'),
   transaction_type: z.enum(['Received', 'Local', 'International', 'Inter-bank', 'ATM']),
   narration: z.string().min(1, 'Narration is required'),
+  date: z.string().min(1, 'Date and time is required'),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -48,6 +49,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
       amount: '',
       transaction_type: 'Local',
       narration: '',
+      date: new Date().toISOString().slice(0, 16), // Default to current date/time
     },
   });
 
@@ -70,6 +72,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
         amount: parseFloat(formData.amount),
         transaction_type: formData.transaction_type,
         narration: formData.narration,
+        date: new Date(formData.date).toISOString(),
       });
 
       toast({
@@ -217,7 +220,7 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                   control={form.control}
                   name="transaction_type"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem>
                       <FormLabel className="text-sm md:text-base">Transaction Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -233,6 +236,24 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                           <SelectItem value="ATM">ATM</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm md:text-base">Transaction Date & Time</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="datetime-local" 
+                          {...field} 
+                          className="h-10 md:h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -303,6 +324,10 @@ const CreateTransaction = ({ onBack }: CreateTransactionProps) => {
                 <div>
                   <span className="font-medium">Type:</span>
                   <p>{formData.transaction_type}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-medium">Date & Time:</span>
+                  <p>{new Date(formData.date).toLocaleString()}</p>
                 </div>
               </div>
               <div>
